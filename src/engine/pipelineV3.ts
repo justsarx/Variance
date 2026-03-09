@@ -3,7 +3,15 @@ import { buildSentenceObjects } from '../utils/tokenizer';
 import type { Paragraph } from './paragraphSegmenter';
 import { segmentIntoParagraphs, extractSentencesFromParagraphs } from './paragraphSegmenter';
 import { analyzeStructure } from './structuralAnalysis';
-import { structuralOperators } from './pipelineV2';
+import { sentenceSplitter } from '../operators/structural/sentenceSplitter';
+import { sentenceMerger } from '../operators/structural/sentenceMerger';
+import { clauseReorderer } from '../operators/structural/clauseReorderer';
+
+const structuralOperators = [
+  sentenceSplitter,
+  sentenceMerger,
+  clauseReorderer,
+];
 import { lexicalSubstitutor } from '../operators/lexical/lexicalSubstitutor';
 import { rhythmVariator } from '../operators/rhythm/rhythmVariator';
 import { semanticGuardParagraph } from './semanticGuard';
@@ -40,8 +48,14 @@ export async function runPipelineV3(
     sentences = rhythmVariator(sentences, options.varianceLevel);
 
     const outputStr = sentences.map(s => s.originalText).join(' ').replace(/\s{2,}/g, ' ');
-    if (outputStr !== input) changeCount = Math.max(1, Math.floor(Math.abs(input.length - outputStr.length) / 5) || 5);
-    onStageChange('Complete', 'Transformation Finished');
+    if (outputStr !== input) {
+      changeCount = Math.max(1, Math.floor(Math.abs(input.length - outputStr.length) / 5) || 5);
+      onStageChange('Complete', 'Transformation Finished');
+    } else {
+      stageLog.push("No obvious variation applied at this variance level.");
+      onStageChange('Complete', 'Transformation Output (Unchanged)');
+    }
+    
     return { output: outputStr, changeCount, stageLog };
   }
 
