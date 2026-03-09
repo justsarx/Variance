@@ -59,14 +59,14 @@ export async function runPipelineV3(
     const p = paragraphs[i];
     
     onStageChange('Transforming', `Rewriting paragraph ${i + 1}/${paragraphs.length}...`);
-    let newParaText = await rewriteParagraph(p.originalText, options.activeModelId, () => {
+    let newParaText = await rewriteParagraph(p.originalText, options.activeModelId, options.varianceLevel, () => {
       // Could stream ML progress back up to UI here
     });
 
     if (options.executionMode === 'Advanced') {
       onStageChange('Transforming', `Deep rewriting paragraph ${i + 1}/${paragraphs.length}...`);
       // Multi-pass LLM rewrite
-      newParaText = await rewriteParagraph(newParaText, options.activeModelId);
+      newParaText = await rewriteParagraph(newParaText, options.activeModelId, options.varianceLevel);
     }
 
     onStageChange('Checking', `Semantic guard on paragraph ${i + 1}/${paragraphs.length}...`);

@@ -2,7 +2,12 @@ import type { Sentence } from '../../types';
 
 export function rhythmVariator(sentences: Sentence[], variance: number): Sentence[] {
   const result: Sentence[] = [];
-  const chance = (variance / 100) * 0.2; // roughly 20% max
+  let chance = (variance / 100) * 0.2; // roughly 20% max
+  
+  // Phase 2: AI Bypass Uncapping
+  if (variance > 75) {
+    chance = (variance / 100) * 0.6; // Up to 60% chance to interject punchy rhythm drops
+  }
 
   for (const sentence of sentences) {
     if (Math.random() < chance && sentence.wordCount > 20) {

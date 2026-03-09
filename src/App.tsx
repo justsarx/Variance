@@ -72,56 +72,6 @@ export default function App() {
           copySuccess={copySuccess}
           disabled={isBusy}
         />
-
-        <div className="flex items-center justify-between px-6 py-2 border-b border-border-default bg-bg-primary font-ui text-[12px] text-text-secondary">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4">
-              <span className="font-ui text-[12px] uppercase tracking-wider text-text-secondary w-20">Variance</span>
-              <input 
-                type="range" 
-                className="flex-1 accent-accent-primary"
-                min="0"
-                max="1"
-                step="0.1"
-                value={varianceLevel}
-                onChange={(e) => setVarianceLevel(parseFloat(e.target.value))}
-                disabled={isBusy}
-              />
-              <span className="font-ui text-[12px] text-text-primary w-8 text-right">{(varianceLevel * 10).toFixed(0)}/10</span>
-            </div>
-            
-            <button 
-              onClick={handleTransform}
-              disabled={isBusy || !inputText.trim()}
-              className={`px-8 py-2 rounded-xl font-ui font-medium tracking-wide transition-all ${
-                isBusy || !inputText.trim()
-                  ? 'bg-bg-elevated text-text-muted cursor-not-allowed border border-border-default'
-                  : 'bg-accent-primary text-black hover:bg-opacity-90 shadow-[0_0_15px_rgba(249,115,22,0.3)]'
-              }`}
-            >
-              {isBusy ? 'Transforming...' : 'Inject Variance'}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between px-6 py-2 border-b border-border-default bg-bg-primary font-ui text-[12px] text-text-secondary">
-          <div className="flex items-center gap-3">
-            <span>Engine V3 Mode: <strong className="text-text-primary ml-1">{executionMode}</strong></span>
-            {executionMode !== 'Lightweight' && activeModelId && (
-              <span className="px-2 py-0.5 rounded bg-accent-glow text-accent-primary border border-accent-primary border-opacity-30 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent-primary"></span>
-                {activeModelId}
-              </span>
-            )}
-          </div>
-          <button 
-            onClick={() => setShowModelManager(true)}
-            disabled={isBusy}
-            className="text-text-primary hover:text-accent-primary hover:bg-bg-elevated px-3 py-1 rounded-md transition-colors border border-border-default hover:border-accent-primary"
-          >
-            Manage Local Models
-          </button>
-        </div>
         
         <div className="flex-1 flex gap-4 px-4 pb-4 pt-4 min-h-0">
           <InputPanel 
@@ -141,6 +91,9 @@ export default function App() {
         inputWordCount={inputWordCount}
         outputWordCount={outputWordCount}
         pipelineStage={pipelineStage}
+        executionMode={executionMode}
+        activeModelId={activeModelId}
+        onManageModels={() => setShowModelManager(true)}
       />
       
       {showModelManager && (

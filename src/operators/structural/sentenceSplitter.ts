@@ -22,7 +22,12 @@ export function sentenceSplitter(sentences: Sentence[], variance: number): Sente
         }
       }
 
-      const shouldSplit = Math.random() < (variance / 100) * 0.4;
+      let shouldSplit = Math.random() < (variance / 100) * 0.4;
+      
+      // Phase 2: AI Bypass Uncapping
+      if (variance > 75) {
+        shouldSplit = Math.random() < (variance / 100) * 0.85; // Up to 85% chance to fragment long sentences
+      }
 
       if (splitIndex !== -1 && shouldSplit) {
         let firstPart = sentence.originalText.substring(0, splitIndex).trim();

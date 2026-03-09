@@ -1,7 +1,13 @@
 import type { Sentence } from '../../types';
 
 export function sentenceMerger(sentences: Sentence[], variance: number): Sentence[] {
-  const mergeChance = (variance / 100) * 0.3;
+  let mergeChance = (variance / 100) * 0.3;
+  
+  // Phase 2: AI Bypass Uncapping
+  if (variance > 75) {
+    mergeChance = (variance / 100) * 0.7; // Up to 70% chance to merge short sentences at max variance
+  }
+
   if (mergeChance < 0.05) return sentences;
 
   const result: Sentence[] = [];
