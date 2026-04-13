@@ -1,4 +1,3 @@
-import type { TransformOptions } from '../types';
 
 export async function rewriteParagraphExternal(
   text: string,
