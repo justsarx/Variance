@@ -11,9 +11,23 @@ interface Props {
   onModeSelect: (mode: ExecutionMode) => void;
   activeModelId: string | null;
   onModelSelect: (id: string | null) => void;
+  apiKey: string;
+  onApiKeyChange: (key: string) => void;
+  apiProvider: 'OpenAI' | 'Anthropic' | 'Gemini';
+  onApiProviderChange: (provider: 'OpenAI' | 'Anthropic' | 'Gemini') => void;
 }
 
-export function ModelManagerPanel({ onClose, activeMode, onModeSelect, activeModelId, onModelSelect }: Props) {
+export function ModelManagerPanel({ 
+  onClose, 
+  activeMode, 
+  onModeSelect, 
+  activeModelId, 
+  onModelSelect,
+  apiKey,
+  onApiKeyChange,
+  apiProvider,
+  onApiProviderChange
+}: Props) {
   const [hw, setHw] = useState<HardwareCapabilities | null>(null);
   const [downloadProgress, setDownloadProgress] = useState<Record<string, { loaded: number, total: number, status: string }>>({});
 
@@ -57,10 +71,10 @@ export function ModelManagerPanel({ onClose, activeMode, onModeSelect, activeMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-bg-surface border border-border-default rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl flex flex-col">
+      <div className="bg-bg-surface border border-border-default rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl flex flex-col focus-within:ring-0">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border-default flex justify-between items-center sticky top-0 bg-bg-surface">
+        <div className="px-6 py-4 border-b border-border-default flex justify-between items-center sticky top-0 bg-bg-surface z-10">
           <h2 className="text-text-primary font-ui font-medium text-[16px]">Engine V3 Settings</h2>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary px-2 py-1">✕</button>
         </div>
@@ -75,37 +89,84 @@ export function ModelManagerPanel({ onClose, activeMode, onModeSelect, activeMod
                 CPU Threads: {hw.cpuThreads} • 
                 Est. Memory: {hw.deviceMemory}GB
               </p>
-              <p className="text-accent-primary text-[13px] mt-2">Recommended Mode: <strong>{hw.recommendedMode}</strong></p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-accent-primary text-[13px]">Recommended Mode: <strong>{hw.recommendedMode}</strong></p>
+                {hw.deviceMemory !== 'unknown' && hw.deviceMemory < 8 && (
+                  <span className="text-amber-500 text-[11px] font-medium bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">LOW SPEC DETECTED</span>
+                )}
+              </div>
             </div>
           )}
 
           {/* Execution Modes */}
           <div>
             <h3 className="text-text-primary font-ui text-[12px] uppercase tracking-wider mb-3">Execution Mode</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {(['Lightweight', 'Balanced', 'Advanced'] as ExecutionMode[]).map(mode => (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {(['Lightweight', 'Balanced', 'Advanced', 'External'] as ExecutionMode[]).map(mode => (
                 <button
                   key={mode}
                   onClick={() => onModeSelect(mode)}
                   className={`p-3 rounded-xl border text-left transition-all ${activeMode === mode ? 'border-accent-primary bg-accent-glow' : 'border-border-default hover:border-text-muted bg-bg-elevated'}`}
                 >
                   <div className={`font-ui text-[14px] ${activeMode === mode ? 'text-accent-primary' : 'text-text-primary'}`}>{mode}</div>
-                  <div className="text-[12px] text-text-muted mt-1">
-                    {mode === 'Lightweight' && 'Algorithmic transforms. Fast, reliable.'}
-                    {mode === 'Balanced' && '1-pass LLM rewrite. Good quality.'}
-                    {mode === 'Advanced' && 'Multi-pass LLM rewrite. Best quality.'}
+                  <div className="text-[11px] text-text-muted mt-1 leading-tight">
+                    {mode === 'Lightweight' && 'Rules only. Fast.'}
+                    {mode === 'Balanced' && '1-pass Local AI.'}
+                    {mode === 'Advanced' && 'Multi-pass Local AI.'}
+                    {mode === 'External' && 'Cloud API (BYOK).'}
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
+          {/* External API Section */}
+          <div className={`p-5 rounded-xl border transition-all ${activeMode === 'External' ? 'border-accent-primary bg-accent-glow' : 'border-border-default bg-bg-elevated'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-text-primary font-ui text-[12px] uppercase tracking-wider">External AI (Bring Your Own Key)</h3>
+              <span className="text-[10px] bg-bg-primary text-text-muted px-2 py-0.5 rounded border border-border-default">RELIABLE FOR LOW SPEC</span>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] text-text-muted uppercase mb-1.5 ml-1">Provider</label>
+                  <select 
+                    value={apiProvider}
+                    onChange={(e) => onApiProviderChange(e.target.value as any)}
+                    className="w-full bg-bg-primary border border-border-default rounded-lg px-3 py-2 text-text-primary text-[13px] outline-none focus:border-accent-primary transition-colors"
+                  >
+                    <option value="OpenAI">OpenAI (GPT-4o-mini)</option>
+                    <option value="Anthropic">Anthropic (Claude 3 Haiku)</option>
+                    <option value="Gemini">Google (Gemini 1.5 Flash)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] text-text-muted uppercase mb-1.5 ml-1">API Key</label>
+                  <input 
+                    type="password"
+                    placeholder="sk-... or AIza..."
+                    value={apiKey}
+                    onChange={(e) => onApiKeyChange(e.target.value)}
+                    className="w-full bg-bg-primary border border-border-default rounded-lg px-3 py-2 text-text-primary text-[13px] outline-none focus:border-accent-primary transition-colors"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-text-secondary italic">
+                Your key is only used for requests and is not stored on any server. Using an external API bypasses local hardware limitations.
+              </p>
+            </div>
+          </div>
+
           {/* Local Models */}
-          <div>
-            <h3 className="text-text-primary font-ui text-[12px] uppercase tracking-wider mb-3">Local AI Models</h3>
+          <div className={activeMode === 'External' ? 'opacity-50 pointer-events-none' : ''}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-text-primary font-ui text-[12px] uppercase tracking-wider">Local AI Models</h3>
+              {activeMode === 'External' && <span className="text-[10px] text-accent-primary">DISABLED IN EXTERNAL MODE</span>}
+            </div>
             <div className="space-y-3">
               {AVAILABLE_MODELS.map(model => {
-                const isActive = activeModelId === model.id;
+                const isActive = activeModelId === model.id && activeMode !== 'External';
                 const progress = downloadProgress[model.id];
                 const bgClass = isActive ? 'border-accent-primary bg-accent-glow' : 'border-border-default bg-bg-elevated';
 
@@ -145,7 +206,6 @@ export function ModelManagerPanel({ onClose, activeMode, onModeSelect, activeMod
               })}
             </div>
           </div>
-
         </div>
       </div>
     </div>

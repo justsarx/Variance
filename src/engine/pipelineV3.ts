@@ -16,6 +16,7 @@ import { lexicalSubstitutor } from '../operators/lexical/lexicalSubstitutor';
 import { rhythmVariator } from '../operators/rhythm/rhythmVariator';
 import { semanticGuardParagraph } from './semanticGuard';
 import { rewriteParagraph } from '../llm/paragraphRewrite';
+import { rewriteParagraphExternal } from '../llm/externalApi';
 
 export async function runPipelineV3(
   input: string,
@@ -23,6 +24,9 @@ export async function runPipelineV3(
   onStageChange: (stage: PipelineStage, progressMessage?: string) => void
 ): Promise<TransformResult> {
   const stageLog: string[] = [`Engine V3: Running in ${options.executionMode} Mode`];
+  if (options.executionMode === 'External') {
+    stageLog.push(`Provider: ${options.apiProvider}`);
+  }
   let changeCount = 0;
 
   // 1: Stage 1 (Tokenization into Paragraphs vs Sentences)
@@ -59,9 +63,14 @@ export async function runPipelineV3(
     return { output: outputStr, changeCount, stageLog };
   }
 
-  // Balanced or Advanced LLM Mode (requires activeModelId)
-  if (!options.activeModelId) {
+  // Balanced, Advanced, or External LLM Mode
+  if (options.executionMode !== 'External' && !options.activeModelId) {
     stageLog.push('No Active ML model selected! Falling back to Lightweight.');
+    return runPipelineV3(input, { ...options, executionMode: 'Lightweight' }, onStageChange);
+  }
+
+  if (options.executionMode === 'External' && !options.apiKey) {
+    stageLog.push('No API Key provided! Falling back to Lightweight.');
     return runPipelineV3(input, { ...options, executionMode: 'Lightweight' }, onStageChange);
   }
 
@@ -73,14 +82,25 @@ export async function runPipelineV3(
     const p = paragraphs[i];
     
     onStageChange('Transforming', `Rewriting paragraph ${i + 1}/${paragraphs.length}...`);
-    let newParaText = await rewriteParagraph(p.originalText, options.activeModelId, options.varianceLevel, () => {
-      // Could stream ML progress back up to UI here
-    });
+    let newParaText = '';
 
-    if (options.executionMode === 'Advanced') {
-      onStageChange('Transforming', `Deep rewriting paragraph ${i + 1}/${paragraphs.length}...`);
-      // Multi-pass LLM rewrite
-      newParaText = await rewriteParagraph(newParaText, options.activeModelId, options.varianceLevel);
+    if (options.executionMode === 'External' && options.apiKey && options.apiProvider) {
+      newParaText = await rewriteParagraphExternal(
+        p.originalText, 
+        options.apiKey, 
+        options.apiProvider, 
+        options.varianceLevel
+      );
+    } else {
+      newParaText = await rewriteParagraph(p.originalText, options.activeModelId!, options.varianceLevel, () => {
+        // Could stream ML progress back up to UI here
+      });
+
+      if (options.executionMode === 'Advanced') {
+        onStageChange('Transforming', `Deep rewriting paragraph ${i + 1}/${paragraphs.length}...`);
+        // Multi-pass LLM rewrite
+        newParaText = await rewriteParagraph(newParaText, options.activeModelId!, options.varianceLevel);
+      }
     }
 
     onStageChange('Checking', `Semantic guard on paragraph ${i + 1}/${paragraphs.length}...`);

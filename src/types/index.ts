@@ -1,5 +1,9 @@
 export interface TransformOptions {
   varianceLevel: number;
+  executionMode: ExecutionMode;
+  activeModelId?: string | null;
+  apiKey?: string;
+  apiProvider?: 'OpenAI' | 'Anthropic' | 'Gemini';
 }
 
 export type PipelineStage = 'Idle' | 'Tokenizing' | 'Analyzing' | 'Transforming' | 'Checking' | 'Complete';
@@ -26,7 +30,7 @@ export interface StyleProfile {
   averagePunctuationPerSentence: number;
 }
 
-export type ExecutionMode = 'Lightweight' | 'Balanced' | 'Advanced';
+export type ExecutionMode = 'Lightweight' | 'Balanced' | 'Advanced' | 'External';
 export type ModelTier = 'light' | 'balanced' | 'advanced';
 
 export interface ModelConfig {

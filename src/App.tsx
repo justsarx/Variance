@@ -23,6 +23,8 @@ export default function App() {
   const [showModelManager, setShowModelManager] = useState(false);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>('Lightweight');
   const [activeModelId, setActiveModelId] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [apiProvider, setApiProvider] = useState<'OpenAI' | 'Anthropic' | 'Gemini'>('OpenAI');
 
   const { displayedWords, isStreaming, startStream } = useWordStream();
 
@@ -32,7 +34,11 @@ export default function App() {
   const handleTransform = async () => {
     if (!inputText.trim() || isBusy) return;
     setChangeCount(null);
-    const result = await runPipelineV3(inputText, { varianceLevel, executionMode, activeModelId }, setPipelineStage);
+    const result = await runPipelineV3(
+      inputText, 
+      { varianceLevel, executionMode, activeModelId, apiKey, apiProvider }, 
+      setPipelineStage
+    );
     setChangeCount(result.changeCount);
     startStream(result.output);
   };
@@ -103,6 +109,10 @@ export default function App() {
           onModeSelect={setExecutionMode}
           activeModelId={activeModelId}
           onModelSelect={setActiveModelId}
+          apiKey={apiKey}
+          onApiKeyChange={setApiKey}
+          apiProvider={apiProvider}
+          onApiProviderChange={setApiProvider}
         />
       )}
     </div>
