@@ -181,7 +181,3 @@ src/
 
 ---
 
-## License
-
-Add your preferred license in `LICENSE` (MIT recommended for open collaboration).
-
