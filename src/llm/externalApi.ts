@@ -6,6 +6,7 @@ export async function rewriteParagraphExternal(
   varianceLevel: number
 ): Promise<string> {
   const temperature = (varianceLevel / 100) * 0.5 + 0.6; // 0.6 to 1.1
+  const userPrompt = `Rewrite this paragraph:\n\n${text}`;
   
   let systemPrompt = "You are a professional editor. Rewrite the following paragraph to read more naturally and human-like. Maintain the original meaning but vary the sentence structure and vocabulary.";
   
@@ -22,18 +23,18 @@ export async function rewriteParagraphExternal(
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4.1-mini',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Rewrite this paragraph:\n\n${text}` }
+            { role: 'user', content: userPrompt }
           ],
           temperature: temperature,
         })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'OpenAI API request failed');
+        const errorText = await response.text();
+        throw new Error(`OpenAI API request failed (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
@@ -52,18 +53,19 @@ export async function rewriteParagraphExternal(
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
+          model: 'claude-3-5-haiku-latest',
           max_tokens: 1024,
           system: systemPrompt,
           messages: [
-            { role: 'user', content: `Rewrite this paragraph:\n\n${text}` }
+            { role: 'user', content: userPrompt }
           ],
           temperature: (varianceLevel / 100)
         })
       });
 
       if (!response.ok) {
-        throw new Error('Anthropic API request failed');
+        const errorText = await response.text();
+        throw new Error(`Anthropic API request failed (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
@@ -74,14 +76,15 @@ export async function rewriteParagraphExternal(
     }
   } else if (provider === 'Gemini') {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
         },
         body: JSON.stringify({
           contents: [{
-            parts: [{ text: `${systemPrompt}\n\nRewrite this paragraph:\n\n${text}` }]
+            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
           }],
           generationConfig: {
             temperature: temperature,
@@ -91,8 +94,8 @@ export async function rewriteParagraphExternal(
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Gemini API request failed');
+        const errorText = await response.text();
+        throw new Error(`Gemini API request failed (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();

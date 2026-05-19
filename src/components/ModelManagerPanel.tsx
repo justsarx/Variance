@@ -136,9 +136,9 @@ export function ModelManagerPanel({
                     onChange={(e) => onApiProviderChange(e.target.value as any)}
                     className="w-full bg-bg-primary border border-border-default rounded-lg px-3 py-2 text-text-primary text-[13px] outline-none focus:border-accent-primary transition-colors"
                   >
-                    <option value="OpenAI">OpenAI (GPT-4o-mini)</option>
-                    <option value="Anthropic">Anthropic (Claude 3 Haiku)</option>
-                    <option value="Gemini">Google (Gemini 1.5 Flash)</option>
+                    <option value="OpenAI">OpenAI (GPT-4.1 mini)</option>
+                    <option value="Anthropic">Anthropic (Claude 3.5 Haiku)</option>
+                    <option value="Gemini">Google (Gemini 2.5 Flash)</option>
                   </select>
                 </div>
                 <div>
