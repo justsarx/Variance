@@ -1,73 +1,187 @@
-# React + TypeScript + Vite
+# Variance
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  <b>Dual-surface AI writing workstation</b><br/>
+  <i>Paraphrase + Chat, powered by local browser models or BYOK cloud APIs.</i>
+</p>
 
-Currently, two official plugins are available:
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-111111?style=for-the-badge&logo=react" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-111111?style=for-the-badge&logo=typescript" />
+  <img src="https://img.shields.io/badge/Vite-7-111111?style=for-the-badge&logo=vite" />
+  <img src="https://img.shields.io/badge/TailwindCSS-3-111111?style=for-the-badge&logo=tailwindcss" />
+  <img src="https://img.shields.io/badge/Transformers.js-2.17-111111?style=for-the-badge" />
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## What is Variance?
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Variance is a client-side React + TypeScript app that gives you two AI writing surfaces in one experience:
 
-## Expanding the ESLint configuration
+- `Paraphrase` tab: transforms text through a structured multi-stage pipeline.
+- `Chat` tab: multi-turn conversation with the same loaded local model or external BYOK provider.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+All local inferencing runs in-browser with `@xenova/transformers` (WebGPU/WASM fallback). No backend is required for local mode.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Highlights
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Dual-tab UI (`Paraphrase` + `Chat`) with shared model/provider state
+- Tiered execution modes: `Lightweight`, `Balanced`, `Advanced`, `External`
+- Local model loading + browser cache via IndexedDB
+- BYOK support for OpenAI, Anthropic, and Gemini
+- Streaming output UX (paraphrase and chat)
+- Semantic guardrails for rewrite drift control
+- Hardware-aware recommendations for low-spec devices
+
+---
+
+## Execution Modes
+
+1. `Lightweight`
+- Fast rule-based transformation only (no LLM call)
+
+2. `Balanced`
+- Single-pass local paragraph rewrite + post-processing operators
+
+3. `Advanced`
+- Multi-pass local rewrite + aggressive final polish
+
+4. `External` (BYOK)
+- Cloud inference path when local hardware is constrained
+
+---
+
+## External Provider Defaults (Current)
+
+- OpenAI: `gpt-4.1-mini`
+- Anthropic: `claude-3-5-haiku-latest`
+- Gemini: `gemini-2.5-flash`
+
+Note: model availability can change by account/region/provider policy.
+
+---
+
+## Quick Start
+
+### 1) Install
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2) Run dev server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+### 3) Build
+
+```bash
+npm run build
+```
+
+### 4) Preview production build
+
+```bash
+npm run preview
+```
+
+---
+
+## How to Use
+
+### Paraphrase Tab
+
+1. Paste or type text in the input panel
+2. Set variance (0-100)
+3. Choose execution mode and model/provider from `Manage Models`
+4. Run transform and copy streamed output
+
+### Chat Tab
+
+1. Switch to `Chat` in the top navbar
+2. Reuse the same active mode/model/provider
+3. Send prompts and continue multi-turn conversation in-session
+
+---
+
+## Project Structure
+
+```text
+src/
+├── components/
+│   ├── ChatPanel.tsx
+│   ├── ControlBar.tsx
+│   ├── ErrorBoundary.tsx
+│   ├── InputPanel.tsx
+│   ├── ModelManagerPanel.tsx
+│   ├── Navbar.tsx
+│   ├── OutputPanel.tsx
+│   └── StatusBar.tsx
+├── engine/
+│   ├── paragraphSegmenter.ts
+│   ├── pipelineV3.ts
+│   ├── semanticGuard.ts
+│   └── structuralAnalysis.ts
+├── llm/
+│   ├── chatReply.ts
+│   ├── externalApi.ts
+│   └── paragraphRewrite.ts
+├── models/
+│   ├── hardwareDetection.ts
+│   ├── modelManager.ts
+│   └── modelRegistry.ts
+├── operators/
+├── types/
+└── utils/
+```
+
+---
+
+## Core Architecture
+
+- `App.tsx` orchestrates dual-tab app state and shared mode/model config
+- `runPipelineV3` drives paraphrase stages and fallback paths
+- `chatReply.ts` handles local/external chat generation with sanitization/retry logic
+- `modelManager.ts` ensures local model reuse and cache-friendly loading
+- `externalApi.ts` centralizes BYOK provider calls
+
+---
+
+## Scripts
+
+- `npm run dev` - start local development
+- `npm run build` - type-check + production build
+- `npm run preview` - preview built app
+- `npm run lint` - run ESLint
+
+---
+
+## Current Status
+
+- Active version line: `v0.2` UI
+- Architecture baseline: `V3.2` (dual-surface update)
+- Chat supports:
+  - shared model/provider configuration
+  - streaming assistant output
+  - local generation retry + response sanitization
+
+---
+
+## Contributing
+
+1. Create a feature branch
+2. Keep architecture docs updated when behavior changes
+3. Run `npm run build` before opening PR
+4. Include screenshots for UI-facing changes
+
+---
+
+## License
+
+Add your preferred license in `LICENSE` (MIT recommended for open collaboration).
+
